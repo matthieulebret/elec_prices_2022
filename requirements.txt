@@ -7,3 +7,4 @@ numpy==1.19.5
 streamlit==1.1.0
 altair==4.1.0
 beautifulsoup4==4.10.0
+lxml==4.7.1
