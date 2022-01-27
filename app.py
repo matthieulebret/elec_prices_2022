@@ -15,8 +15,8 @@ from datetime import date, timedelta,time
 import xlrd
 import openpyxl
 
-import dask
-import dask.dataframe as dd
+# import dask
+# import dask.dataframe as dd
 #
 # import config
 # import simplejson
@@ -151,9 +151,33 @@ def getprices():
     links = soup.find_all('a')
     ziplist = [path+link['href'] for link in links if 'zip' in link['href']]
 
-    df = dd.read_csv(ziplist,usecols=['SETTLEMENTDATE','REGIONID','RRP'],header=1,compression='zip',dtype={'RRP':'object'})
-    df = df.compute()
-    df = df.dropna()
+    totaldf = pd.DataFrame()
+    totalfiles = len(ziplist)
+
+    i = 1
+
+    placeholder = st.empty()
+    progholder = st.empty()
+    mybar = st.progress(0)
+
+    for zip in ziplist:
+        df = pd.read_csv(zip,usecols=['SETTLEMENTDATE','REGIONID','RRP'],header=1,compression='zip',dtype={'RRP':'object'})
+        totaldf = pd.concat([totaldf,df])
+        with placeholder:
+            st.write('File #{0} complete '.format(i)+'/ '+str(totalfiles)+'.')
+        with progholder:
+            pct_complete = '{:,.2%}'.format(i/totalfiles)
+            st.write(pct_complete,' complete.' )
+            try:
+                mybar.progress(i/totalfiles)
+            except:
+                mybar.progress(1)
+        i=i+1
+
+    df = totaldf
+    # df = dd.read_csv(ziplist,usecols=['SETTLEMENTDATE','REGIONID','RRP'],header=1,compression='zip',dtype={'RRP':'object'})
+    # df = df.compute()
+    # df = df.dropna()
     df = df[df['SETTLEMENTDATE']!='SETTLEMENTDATE']
     df.columns = ['Time','State','Price']
     df['Price'] = pd.to_numeric(df['Price'],errors='coerce')
