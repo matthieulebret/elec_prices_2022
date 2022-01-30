@@ -11,7 +11,7 @@ import pandas as pd
 import datetime as dt
 from timeit import default_timer as timer
 import calendar
-from datetime import date, timedelta,time
+from datetime import date, timedelta,time,datetime
 import xlrd
 import openpyxl
 
@@ -136,7 +136,7 @@ bigdf = gethistory()
 
 # Get current data
 
-@st.cache(suppress_st_warning=True,allow_output_mutation=True,ttl=7200)
+@st.cache(suppress_st_warning=True,allow_output_mutation=True)
 def getprices():
 
     path = 'https://nemweb.com.au'
@@ -182,11 +182,11 @@ def getprices():
     df.columns = ['Time','State','Price']
     df['Price'] = pd.to_numeric(df['Price'],errors='coerce')
     df['Time'] = pd.to_datetime(df['Time'],errors='coerce')
-
+    st.write('Last update time: ',datetime.now())
     return df
 
 
-@st.cache(suppress_st_warning=True,allow_output_mutation=True)
+@st.cache(suppress_st_warning=True,allow_output_mutation=True,ttl=7200)
 def consoldata():
     df = getprices()
     df = pd.concat([bigdf,df])
