@@ -136,7 +136,6 @@ bigdf = gethistory()
 
 # Get current data
 
-@st.cache(suppress_st_warning=True,allow_output_mutation=True)
 def getprices():
 
     path = 'https://nemweb.com.au'
@@ -173,7 +172,6 @@ def getprices():
             except:
                 mybar.progress(1)
         i=i+1
-
     df = totaldf
     # df = dd.read_csv(ziplist,usecols=['SETTLEMENTDATE','REGIONID','RRP'],header=1,compression='zip',dtype={'RRP':'object'})
     # df = df.compute()
