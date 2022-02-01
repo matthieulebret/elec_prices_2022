@@ -153,6 +153,7 @@ def getprices():
     totaldf = pd.DataFrame()
     totalfiles = len(ziplist)
 
+
     i = 1
 
     placeholder = st.empty()
@@ -219,6 +220,9 @@ with st.form(key='thresholds'):
 
     submit_button = st.form_submit_button(label='Submit')
 
+if daytime:
+    df = df[(df['Period Number']>96)&(df['Period Number']<218)]
+    prices = df.pivot_table(index='Time',columns=['Year','Month','State'],values='Price')
 
 
 negatives = pd.DataFrame(prices.where(prices<thres).count()/prices.count())
@@ -263,7 +267,6 @@ with st.form(key='myform'):
     col1,col2 = st.columns(2)
     with col1:
         selectfreq = st.selectbox('Select frequency',freqlist,index=4)
-        daytime = st.checkbox('Daytime only 8:00 to 18:00')
     with col2:
         selectstate = st.selectbox('Select state',statelist,index=0)
     submit_button = st.form_submit_button(label='Submit')
@@ -279,60 +282,25 @@ if daytime:
 df = df.groupby('State').resample(selectfreq).mean().reset_index()
 
 
-highlight = alt.selection(type='interval',bind='scales',encodings=['x','y'])
-fig = alt.Chart(df).mark_line().encode(alt.X('Time:T'),alt.Y('Price:Q',scale=alt.Scale(domain=(-100,200))),color='State:N',tooltip=[
+# highlight = alt.selection(type='interval',bind='scales',encodings=['x','y'])
+# fig = alt.Chart(df).mark_line().encode(alt.X('Time:T'),alt.Y('Price:Q',scale=alt.Scale(domain=(-100,200))),color='State:N',tooltip=[
+#       {"type": "quantitative", "field": "Price"},
+#       {"type": "temporal", "field": "Time"},
+#       {"type": "nominal", "field": "State"}]).add_selection(highlight)
+# st.altair_chart(fig,use_container_width=True)
+
+brush = alt.selection_interval(empty='all',encodings=['x'])
+points = (alt.Chart(df).mark_line().encode(alt.X('Time:T'),alt.Y('Price:Q'),color=alt.condition(brush,'State:N',alt.value('lightgray')),tooltip=[
       {"type": "quantitative", "field": "Price"},
       {"type": "temporal", "field": "Time"},
-      {"type": "nominal", "field": "State"}]).add_selection(highlight)
-st.altair_chart(fig,use_container_width=True)
+      {"type": "nominal", "field": "State"}])).add_selection(brush)
 
+bars = (alt.Chart(df).transform_joinaggregate(total='count(*)').transform_calculate(pct='1/datum.total').mark_bar(opacity=0.7).encode(alt.X('Price:Q',bin=alt.Bin(step=10,extent=[-50,200]),scale=alt.Scale(domain=[-50,200])),y=alt.Y('sum(pct):Q',stack=None,axis=alt.Axis(format='%')),color=alt.Color('State:N')).transform_filter(brush))
 
-#
+chart = alt.hconcat(points,bars).properties(title='Click and drag to create a selection region')
 
-st.subheader('Price distribution')
+st.altair_chart(chart, use_container_width=True)
 
-with st.form(key='myform2'):
-    binnumb = st.number_input('Enter bin number',min_value=0,value=2000,key=0)
-    submit_button = st.form_submit_button(label='Submit')
-
-
-if selectstate == 'All':
-    highlight = alt.selection(type='interval',bind='scales',encodings=['x','y'])
-    fig = alt.Chart(df).transform_joinaggregate(total='count(*)').transform_calculate(pct='1/datum.total').mark_bar(opacity=0.5).encode(alt.X('Price:Q',scale=alt.Scale(domain=(-100,200)),bin=alt.BinParams(maxbins=binnumb)),alt.Y('sum(pct):Q',stack=None,axis=alt.Axis(format='%')),color='State:N',tooltip=[
-          {"type": "quantitative", "field": "Price"}]).add_selection(highlight)
-    st.altair_chart(fig,use_container_width=True)
-else:
-    highlight = alt.selection(type='interval',bind='scales',encodings=['x','y'])
-    fig = alt.Chart(df).transform_joinaggregate(total='count(*)').transform_calculate(pct='1/datum.total').mark_bar(opacity=0.7).encode(alt.X('Price:Q',scale=alt.Scale(domain=(-100,200)),bin=alt.BinParams(maxbins=binnumb)),alt.Y('sum(pct):Q',axis=alt.Axis(format='%')),color='State:N',tooltip=[
-          {"type": "quantitative", "field": "Price"}]).add_selection(highlight)
-    st.altair_chart(fig,use_container_width=True)
-
-#Average prices per time
-
-st.subheader('Price distribution across daily time intervals')
-
-pricesbytime = df.groupby(by=['State','Period Number'])['Price'].mean()
-pricesbytime = pd.DataFrame(pricesbytime)
-pricesbytime.reset_index(inplace = True)
-
-with st.form(key='myform3'):
-    binnumb = st.number_input('Enter bin number',min_value=0,value=50,key=1)
-
-    submit_button = st.form_submit_button(label='Submit')
-
-
-if selectstate =='All':
-    fig = alt.Chart(pricesbytime).mark_bar(opacity=0.5).encode(alt.X('Period Number:N',bin=alt.BinParams(maxbins=binnumb)),alt.Y('Price:Q',scale=alt.Scale(domain=(0,200)),stack=None),color='State:N',tooltip=[
-          {"type": "quantitative", "field": "Price"},
-          {"type": "nominal", "field": "State"},
-          {"type": "nominal", "field": "Period Number"}]).add_selection(highlight)
-    st.altair_chart(fig,use_container_width=True)
-else:
-    fig = alt.Chart(pricesbytime).mark_bar(opacity=0.7).encode(alt.X('Period Number:N',bin=alt.BinParams(maxbins=binnumb)),alt.Y('Price:Q',scale=alt.Scale(domain=(0,200))),color='State:N',tooltip=[
-          {"type": "quantitative", "field": "Price"},
-          {"type": "nominal", "field": "State"},
-          {"type": "nominal", "field": "Period Number"}]).add_selection(highlight)
-    st.altair_chart(fig,use_container_width=True)
 
 
 
