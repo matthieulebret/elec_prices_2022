@@ -69,7 +69,7 @@ def gethistory():
 
     #Get total number of files
 
-    totalfiles = 395
+    totalfiles = 396
 
     st.markdown('This process will take around 3 minutes to complete.')
 
@@ -295,9 +295,9 @@ points = (alt.Chart(df).mark_line().encode(alt.X('Time:T'),alt.Y('Price:Q'),colo
       {"type": "temporal", "field": "Time"},
       {"type": "nominal", "field": "State"}])).add_selection(brush)
 
-# bars = (alt.Chart(df).transform_joinaggregate(total='count(*)').transform_calculate(pct='1/datum.total').mark_bar(opacity=0.7).encode(alt.X('Price:Q',bin=alt.Bin(step=10,extent=[-50,200]),scale=alt.Scale(domain=[-50,200])),y=alt.Y('sum(pct):Q',stack=None,axis=alt.Axis(format='%')),color=alt.Color('State:N')).transform_filter(brush))
+bars = (alt.Chart(df).transform_joinaggregate(total='count(*)').transform_calculate(pct='1/datum.total').mark_bar(opacity=0.7).encode(alt.X('Price:Q',bin=alt.Bin(step=10,extent=[-50,200]),scale=alt.Scale(domain=[-50,200])),y=alt.Y('sum(pct):Q',stack=None,axis=alt.Axis(format='%')),color=alt.Color('State:N')).transform_filter(brush))
 
-bars = (alt.Chart(df).mark_bar(opacity=0.7).encode(alt.X('Price:Q',bin=alt.Bin(step=10,extent=[-50,200]),scale=alt.Scale(domain=[-50,200])),y=alt.Y('count(Price):Q',stack=None),color=alt.Color('State:N')).transform_filter(brush))
+# bars = (alt.Chart(df).mark_bar(opacity=0.7).encode(alt.X('Price:Q',bin=alt.Bin(step=10,extent=[-50,200]),scale=alt.Scale(domain=[-50,200])),y=alt.Y('count(Price):Q',stack=None),color=alt.Color('State:N')).transform_filter(brush))
 
 chart = alt.hconcat(points,bars).properties(title='Click and drag to create a selection region')
 
